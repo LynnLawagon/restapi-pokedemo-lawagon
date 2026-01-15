@@ -3,7 +3,7 @@ import ClientWrapper from "./components/ClientWrapper";
  
  
 async function fetchPokemon(limit = 20) {
-  const res = await fetch(`https://pokeapi.co/api/v2/pokemon?limit=102`);
+  const res = await fetch(`https://pokeapi.co/api/v2/pokemon?limit=25`);
   const list = await res.json();
  
  
