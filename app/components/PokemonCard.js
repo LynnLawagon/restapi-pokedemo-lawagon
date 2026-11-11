@@ -1,23 +1,4 @@
-export default function PokemonCard({ pokemon }) {
-  return (
-    <div className="border rounded-lg p-4 shadow-lg hover:shadow-xl transition-shadow">
-      <img 
-        src={pokemon.sprites.front_default} 
-        alt={pokemon.name}
-        className="w-full h-48 object-contain"
-      />
-      <h2 className="text-xl font-bold capitalize mt-2">{pokemon.name}</h2>
-      <p className="text-gray-600">#{pokemon.id}</p>
-      <div className="mt-2">
-        {pokemon.types.map((type) => (
-          <span 
-            key={type.type.name}
-            className="inline-block bg-blue-500 text-white px-3 py-1 rounded-full text-sm mr-2"
-          >
-            {type.type.name}
-          </span>
-        ))}
-      </div>
-    </div>
-  )
-}
+"use client";
+const colors={normal:"#a8a77a",fire:"#ee8130",water:"#6390f0",electric:"#f7d02c",grass:"#7ac74c",ice:"#96d9d6",fighting:"#c22e28",poison:"#a33ea1",ground:"#e2bf65",flying:"#a98ff3",psychic:"#f95587",bug:"#a6b91a",rock:"#b6a136",ghost:"#735797",dragon:"#6f35fc",dark:"#705746",steel:"#b7b7ce",fairy:"#d685ad"};
+export function TypePill({name}){return <span className="type-pill" style={{background:colors[name]||"#777"}}>{name}</span>;}
+export default function PokemonCard({pokemon,favorite,onFavorite,onClick}){const art=pokemon.sprites.other["official-artwork"].front_default||pokemon.sprites.front_default;return <article className="pokemon-card"><button className="favorite" onClick={onFavorite} aria-label="Toggle favorite">{favorite?"♥":"♡"}</button><button className="pokemon-open" onClick={onClick}><div className="pokemon-art"><span>#{String(pokemon.id).padStart(3,"0")}</span><img src={art} alt={pokemon.name}/></div><div className="pokemon-meta"><h3>{pokemon.name}</h3><div className="type-row">{pokemon.types.map(t=><TypePill key={t.type.name} name={t.type.name}/>)}</div><small>VIEW POKÉDEX ENTRY ↗</small></div></button></article>;}

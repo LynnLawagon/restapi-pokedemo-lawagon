@@ -1,31 +1,28 @@
 "use client";
-
-import { useState } from "react";
-import Search from "./Search";
-import PokemonCard from "./PokemonCard";
+import {useMemo,useState} from "react";
+import PokemonCard,{TypePill} from "./PokemonCard";
 import StatsChart from "./StatsChart";
-
-export default function ClientWrapper({ data }) {
-  const [query, setQuery] = useState("");
-
-  const filtered = data.filter((p) => p.name.includes(query));
-
-  return (
-    <>
-      <Search onSearch={setQuery} />
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {filtered.map((p) => (
-          <PokemonCard key={p.id} pokemon={p} />
-        ))}
-      </div>
-
-      {filtered.length === 1 && (
-        <>
-          <h3 className="text-xl font-semibold mt-6">Stats Chart</h3>
-          <StatsChart pokemon={filtered[0]} />
-        </>
-      )}
-    </>
-  );
+const TYPES=["all","normal","fire","water","electric","grass","ice","fighting","poison","ground","flying","psychic","bug","rock","ghost","dragon","dark","steel","fairy"];
+const facts=["Pikachu was not the only early mascot candidate. Clefairy was also considered during development.","Bulbasaur is #001 in the National Pokédex.","Eevee is famous for its many possible evolutions, often called Eeveelutions.","Pokémon designs draw inspiration from animals, plants, mythology, and everyday objects.","The Pokémon world is about more than battles: exploring, collecting, trading, and friendship are part of the adventure."];
+const quiz=[{q:"Which Pokémon is #001 in the National Pokédex?",a:["Pikachu","Bulbasaur","Charmander"],c:1,n:"Bulbasaur starts the National Pokédex at #001."},{q:"Which type is super effective against Water?",a:["Fire","Electric","Ice"],c:1,n:"Electric-type moves are super effective against Water."},{q:"What is Eevee famous for?",a:["Many evolutions","Being a legendary","Changing type every turn"],c:0,n:"Eevee has several different evolutions."},{q:"Which item is commonly used to catch wild Pokémon?",a:["Potion","Poké Ball","Revive"],c:1,n:"The classic Poké Ball is used to catch wild Pokémon."}];
+const total=p=>p.stats.reduce((n,s)=>n+s.base_stat,0);
+export default function ClientWrapper({data}){
+ const [query,SQ]=useState(""),[type,ST]=useState("all"),[page,SP]=useState(1),[favorites,SF]=useState([]),[onlyFav,SO]=useState(false),[selected,SS]=useState(null);
+ const [one,S1]=useState(6),[two,S2]=useState(25),[battle,SB]=useState(null),[fact, SFact]=useState(0),[q,SQn]=useState(0),[answer,SA]=useState(null);
+ const filtered=useMemo(()=>data.filter(p=>(p.name.includes(query.toLowerCase())||String(p.id).includes(query))&&(type==="all"||p.types.some(t=>t.type.name===type))&&(!onlyFav||favorites.includes(p.id))),[data,query,type,onlyFav,favorites]);
+ const shown=filtered.slice(0,page*24),a=data.find(p=>p.id===Number(one)),b=data.find(p=>p.id===Number(two));
+ const fav=id=>SF(old=>old.includes(id)?old.filter(x=>x!==id):[...old,id]);
+ function start(){if(one===two)return;SB({hp1:100,hp2:100,log:"The trainers enter the arena. Choose who attacks first!"});}
+ function hit(side){SB(old=>{if(!old||!old.hp1||!old.hp2)return old;const d=12+Math.floor(Math.random()*25);return side===1?{...old,hp2:Math.max(0,old.hp2-d),log:`${a.name} strikes! ${b.name} takes ${d} damage.`}:{...old,hp1:Math.max(0,old.hp1-d),log:`${b.name} strikes! ${a.name} takes ${d} damage.`};});}
+ const current=quiz[q];
+ return <main className="site-shell">
+ <section className="hero"><div className="hero-copy"><div className="eyebrow"><i/> YOUR NEXT ADVENTURE STARTS HERE</div><h1>Gotta explore<br/><em>them all.</em></h1><p>A fan-made field guide to Pokémon. Discover creatures, build your favorites, and settle friendly rivalries in the battle lab.</p><div className="hero-actions"><a className="button yellow" href="#pokedex">Explore Pokédex ↘</a><a className="hero-link" href="#showdown">Enter Showdown →</a></div><div className="hero-stats"><div><b>{data.length}</b><small>Pokémon loaded</small></div><div><b>{favorites.length}</b><small>Your favorites</small></div><div><b>01</b><small>Trainer mindset</small></div></div></div><div className="hero-art"><div className="hero-orbit"/><img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png" alt="Pikachu"/><span className="float-chip chip-a">⚡ ELECTRIC TYPE</span><span className="float-chip chip-b">#025 · PIKACHU</span><b className="spark">✦</b></div><div className="hero-foot">KANTO REGION　✦　TRAINER'S FIELD NOTES　✦　POWERED BY POKÉAPI</div></section>
+ <section className="section" id="pokedex"><div className="section-head"><div><div className="eyebrow red">THE FIELD GUIDE / 001—151</div><h2>Explore the Pokédex<span>.</span></h2><p>Find a familiar face or discover your next favorite.</p></div><div className="result-count"><b>{filtered.length.toString().padStart(3,"0")}</b><small>RESULTS</small></div></div>
+ <div className="toolbar"><label className="search-box">⌕ <input value={query} onChange={e=>{SQ(e.target.value);SP(1)}} placeholder="Search by name or Pokédex number..."/></label><button className={onlyFav?"fav-filter selected":"fav-filter"} onClick={()=>{SO(!onlyFav);SP(1)}}>♡ Favorites ({favorites.length})</button></div><div className="type-filters">{TYPES.map(t=><button key={t} className={type===t?"type-filter active":"type-filter"} onClick={()=>{ST(t);SP(1)}}>{t==="all"?"All types":t}</button>)}</div>
+ {shown.length?<div className="pokemon-grid">{shown.map(p=><PokemonCard key={p.id} pokemon={p} favorite={favorites.includes(p.id)} onFavorite={()=>fav(p.id)} onClick={()=>SS(p)}/>)}</div>:<div className="empty"><h3>No Pokémon found</h3><p>Try another name, number, or type filter.</p><button className="button dark" onClick={()=>{SQ("");ST("all");SO(false)}}>Clear filters</button></div>}{shown.length<filtered.length&&<button className="load-more" onClick={()=>SP(page+1)}>Load more Pokémon　＋</button>}</section>
+ <section className="showdown" id="showdown"><div className="section-head light"><div><div className="eyebrow">THE BATTLE LAB / TRAINER CHALLENGE</div><h2>Pokémon Showdown<span>.</span></h2><p>Pick two Pokémon and let the friendly rivalry begin.</p></div><div className="versus-stamp">VS<small>ARENA</small></div></div><div className="fighters">{[{p:a,id:one,set:S1,label:"CHALLENGER 01"},{p:b,id:two,set:S2,label:"CHALLENGER 02"}].map((x,i)=><div className="fighter" key={i}><small>{x.label}</small><select value={x.id} onChange={e=>{x.set(Number(e.target.value));SB(null)}}>{data.map(p=><option key={p.id} value={p.id}>#{String(p.id).padStart(3,"0")} · {p.name}</option>)}</select><img src={x.p.sprites.other["official-artwork"].front_default||x.p.sprites.front_default} alt={x.p.name}/><h3>{x.p.name}</h3><div className="type-row centered">{x.p.types.map(t=><TypePill key={t.type.name} name={t.type.name}/>)}</div><div className="fighter-total"><span>BASE STAT TOTAL</span><b>{total(x.p)}</b></div></div>)}</div><button className="button battle-start" onClick={start} disabled={one===two}>⚔ Start the showdown</button>{battle&&<div className="battle-panel"><div className="hp-grid">{[{p:a,hp:battle.hp1},{p:b,hp:battle.hp2}].map(x=><div key={x.p.id}><b>{x.p.name}</b><div className="hp-track"><i style={{width:x.hp+"%"}}/></div><small>{x.hp} / 100 HP</small></div>)}</div><p>{battle.hp1===0?`${b.name} wins this round!`:battle.hp2===0?`${a.name} wins this round!`:battle.log}</p><div className="battle-actions"><button disabled={!battle.hp1||!battle.hp2} onClick={()=>hit(1)}>{a.name} attacks</button><button disabled={!battle.hp1||!battle.hp2} onClick={()=>hit(2)}>{b.name} attacks</button><button onClick={start}>Reset</button></div><small className="disclaimer">Fan-made mini-game. Damage is randomized; this is not an official Pokémon battle simulator.</small></div>}</section>
+ <section className="section extras" id="trivia"><div className="section-head"><div><div className="eyebrow red">A LITTLE EXTRA / FOR TRAINERS</div><h2>Beyond the Pokédex<span>.</span></h2><p>Take a break from browsing. There is always more to learn.</p></div></div><div className="extra-grid"><article className="fact-card"><small>✦ TRAINER'S NOTE / DID YOU KNOW?</small><div className="quote-mark">“</div><p>{facts[fact]}</p><button onClick={()=>SFact((fact+1)%facts.length)}>Another fun fact →</button><b className="watermark">P</b></article><article className="quiz-card"><small>◎ QUICK QUIZ / TEST YOUR KNOWLEDGE</small><div className="quiz-number">QUESTION {q+1} OF {quiz.length}</div><h3>{current.q}</h3><div className="answers">{current.a.map((v,i)=><button key={v} className={answer===i?(i===current.c?"right":"wrong"):""} onClick={()=>SA(i)}>{String.fromCharCode(65+i)}　{v}{answer===i?(i===current.c?"　✓":"　×"):""}</button>)}</div>{answer!==null&&<p className="feedback">{answer===current.c?"Nice work, Trainer!":"Not quite — keep learning!"} {current.n}</p>}<button className="next" onClick={()=>{SQn((q+1)%quiz.length);SA(null)}}>{q===quiz.length-1?"Start again":"Next question"} →</button></article></div></section>
+ <footer className="footer"><b>◉ PokéAtlas</b><p>A fan-made Pokémon playground, made for curious trainers.</p><small>DATA & SPRITES BY POKÉAPI · NOT AFFILIATED WITH NINTENDO OR THE POKÉMON COMPANY</small></footer>
+ {selected&&<div className="modal-backdrop" onClick={()=>SS(null)}><div className="pokemon-modal" onClick={e=>e.stopPropagation()}><button className="close" onClick={()=>SS(null)}>×</button><div className="modal-art"><span>#{String(selected.id).padStart(3,"0")}</span><img src={selected.sprites.other["official-artwork"].front_default||selected.sprites.front_default} alt={selected.name}/></div><div className="modal-info"><div className="eyebrow red">POKÉDEX ENTRY</div><h2>{selected.name}</h2><div className="type-row">{selected.types.map(t=><TypePill key={t.type.name} name={t.type.name}/>)}</div><p className="measure">HEIGHT {(selected.height/10).toFixed(1)} M　·　WEIGHT {(selected.weight/10).toFixed(1)} KG</p><h4>BASE STATS</h4><StatsChart pokemon={selected}/><button className="button dark" onClick={()=>fav(selected.id)}>{favorites.includes(selected.id)?"♥ Remove from favorites":"♡ Add to favorites"}</button></div></div></div>}
+ </main>;
 }

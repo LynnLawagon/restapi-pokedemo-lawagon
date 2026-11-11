@@ -1,26 +1,3 @@
 "use client";
-
 import Link from "next/link";
-
-export default function Navbar() {
-  return (
-    <nav className="p-4 bg-red-600 text-white flex justify-between">
-      <h1 className="text-xl font-bold">Pokémon Dashboard</h1>
-      <div className="space-x-4">
-        <Link
-          href="/"
-          className="hover:underline"
-        >
-          Home
-        </Link>
-
-        <Link
-          href="/about"
-          className="hover:underline"
-        >
-          About
-        </Link>
-      </div>
-    </nav>
-  );
-}
+export default function Navbar(){return <header className="topbar"><Link href="/" className="brand"><span className="brand-ball">◉</span>Poké<span>Atlas</span></Link><nav><Link href="/#pokedex">Explore</Link><a href="/#showdown">Showdown</a><a href="/#trivia">Trivia</a><Link href="/about">About</Link></nav><span className="top-tag">FAN PROJECT</span></header>;}
